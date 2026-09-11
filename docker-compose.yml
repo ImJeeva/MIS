@@ -1,0 +1,29 @@
+# Optional: only needed if you DON'T have a local MySQL.
+# The project defaults to a local MySQL (see server/.env). To use this instead,
+# run `docker compose up -d db` and point server/.env DATABASE_URL at port 3307.
+services:
+  db:
+    image: mysql:8.0
+    container_name: mis-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: mis
+      MYSQL_USER: mis
+      MYSQL_PASSWORD: mispass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mis_mysql_data:/var/lib/mysql
+
+  adminer:
+    image: adminer:4
+    container_name: mis-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+volumes:
+  mis_mysql_data:

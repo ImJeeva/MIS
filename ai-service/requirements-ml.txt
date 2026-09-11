@@ -1,0 +1,5 @@
+# Extra deps for running the REAL trained CNN (after you've trained it on Colab
+# and copied model/pneumonia_densenet169.keras into ai-service/model/).
+#   pip install -r requirements.txt -r requirements-ml.txt
+tensorflow-cpu==2.16.1
+scikit-learn>=1.4

@@ -1,0 +1,21 @@
+{
+  "name": "mis",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MIS — Chest X-ray sharing platform with AI pneumonia screening",
+  "scripts": {
+    "start": "concurrently -k -n server,client,ai -c blue,green,magenta \"npm:dev:server\" \"npm:dev:client\" \"npm:dev:ai\"",
+    "dev": "concurrently -k -n server,client,ai -c blue,green,magenta \"npm:dev:server\" \"npm:dev:client\" \"npm:dev:ai\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev:ai": "node scripts/run-ai.mjs",
+    "setup": "npm run install:all && npm --prefix server exec prisma generate && npm --prefix server run db:migrate && npm --prefix server run db:seed && pip install -r ai-service/requirements.txt",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "db:migrate": "npm --prefix server run db:migrate",
+    "db:seed": "npm --prefix server run db:seed",
+    "db:reset": "npm --prefix server run db:reset"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

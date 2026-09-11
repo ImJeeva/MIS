@@ -1,0 +1,6 @@
+{
+  "model_name": "DenseNet169-TL",
+  "model_version": "1.0",
+  "auc": 0.9550186280955512,
+  "trained_on": "chest-xray-pneumonia (Kermany)"
+}

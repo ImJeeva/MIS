@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum LinkStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum StudyType {
+  XRAY
+  REPORT
+}
+
+enum AiStatus {
+  PENDING
+  DONE
+  FAILED
+}
+
+enum AiPrediction {
+  NORMAL
+  ABNORMAL
+}
+
+model User {
+  id           String     @id @default(cuid())
+  role         Role       @default(PATIENT)
+  email        String     @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  gender       String?
+  dob          DateTime?
+  avatarUrl    String?
+  status       UserStatus @default(ACTIVE)
+
+  // doctor-only
+  isVerified     Boolean @default(false)
+  specialization String?
+  licenseNo      String?
+  bio            String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  linksAsPatient   DoctorPatientLink[] @relation("PatientLinks")
+  linksAsDoctor    DoctorPatientLink[] @relation("DoctorLinks")
+  ownedStudies     Study[]             @relation("StudyOwner")
+  uploadedStudies  Study[]             @relation("StudyUploader")
+  sharesCreated    Share[]             @relation("ShareBy")
+  sharesReceived   Share[]             @relation("ShareWithDoctor")
+  notesAsPatient   AppointmentNote[]   @relation("NotePatient")
+  notesAsDoctor    AppointmentNote[]   @relation("NoteDoctor")
+  notifications    Notification[]
+  auditLogs        AuditLog[]          @relation("AuditActor")
+}
+
+model DoctorPatientLink {
+  id        String     @id @default(cuid())
+  patient   User       @relation("PatientLinks", fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  doctor    User       @relation("DoctorLinks", fields: [doctorId], references: [id], onDelete: Cascade)
+  doctorId  String
+  status    LinkStatus @default(PENDING)
+  message   String?    @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([patientId, doctorId])
+  @@index([doctorId])
+  @@index([patientId])
+}
+
+model Study {
+  id             String    @id @default(cuid())
+  owner          User      @relation("StudyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId        String
+  uploader       User      @relation("StudyUploader", fields: [uploaderId], references: [id])
+  uploaderId     String
+  type           StudyType @default(XRAY)
+  title          String
+  fileName       String
+  filePath       String
+  fileMime       String
+  fileSizeBytes  Int
+  bodyPart       String    @default("Chest")
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now())
+
+  aiResult AiResult?
+  shares   Share[]
+  noteRefs AppointmentNote[]
+
+  @@index([ownerId])
+  @@index([type])
+}
+
+model AiResult {
+  id          String       @id @default(cuid())
+  study       Study        @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  studyId     String       @unique
+  status      AiStatus     @default(PENDING)
+  prediction  AiPrediction?
+  label       String?
+  confidence  Float?
+  modelName   String?
+  modelVersion String?
+  inferenceMs Int?
+  error       String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Share {
+  id                 String    @id @default(cuid())
+  study              Study     @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  studyId            String
+  sharedBy           User      @relation("ShareBy", fields: [sharedById], references: [id])
+  sharedById         String
+  sharedWithDoctor   User      @relation("ShareWithDoctor", fields: [sharedWithDoctorId], references: [id], onDelete: Cascade)
+  sharedWithDoctorId String
+  canDownload        Boolean   @default(true)
+  message            String?   @db.Text
+  createdAt          DateTime  @default(now())
+  revokedAt          DateTime?
+
+  @@unique([studyId, sharedWithDoctorId])
+  @@index([sharedWithDoctorId])
+}
+
+model AppointmentNote {
+  id        String   @id @default(cuid())
+  patient   User     @relation("NotePatient", fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  doctor    User     @relation("NoteDoctor", fields: [doctorId], references: [id], onDelete: Cascade)
+  doctorId  String
+  study     Study?   @relation(fields: [studyId], references: [id], onDelete: SetNull)
+  studyId   String?
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([doctorId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  type      String
+  title     String
+  body      String?  @db.Text
+  linkTo    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorId    String?
+  action     String
+  targetType String?
+  targetId   String?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}

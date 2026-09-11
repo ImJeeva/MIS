@@ -1,0 +1,27 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+npm-debug.log*
+
+# server
+server/uploads/*
+!server/uploads/.gitkeep
+
+# ai-service
+ai-service/__pycache__/
+ai-service/.venv/
+ai-service/venv/
+ai-service/data/
+# NOTE: the trained model (model/*.weights.h5, model/*.keras, model_meta.json)
+# is intentionally tracked - it's a one-time Colab training result and we want
+# it to travel with the repo instead of being re-trained on every clone.
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
