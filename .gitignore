@@ -5,6 +5,7 @@ build/
 .env.local
 *.log
 npm-debug.log*
+.mis-setup-complete
 
 # server
 server/uploads/*
