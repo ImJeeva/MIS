@@ -138,6 +138,14 @@ class Predictor:
             except Exception:  # noqa: BLE001
                 pass
 
+    def _warm_up(self) -> None:
+        """TensorFlow's first predict() is very slow (graph tracing / kernel init, 20+ s on a
+        CPU). Do it once at startup so the first real upload is as fast as the rest."""
+        try:
+            self._keras.predict(np.zeros((1, IMG_SIZE, IMG_SIZE, 3), dtype=np.float32), verbose=0)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[predictor] warm-up skipped ({exc})")
+
     def _try_load_keras(self) -> None:
         os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
@@ -154,6 +162,7 @@ class Predictor:
                 self._preprocess = preprocess_input
                 self.mode = "cnn"
                 self._apply_meta()
+                self._warm_up()
                 print(f"[predictor] loaded trained CNN from weights ({self.model_name} v{self.model_version})")
                 return
             except Exception as exc:  # noqa: BLE001
@@ -168,6 +177,7 @@ class Predictor:
                 self._preprocess = preprocess_input
                 self.mode = "cnn"
                 self._apply_meta()
+                self._warm_up()
                 print(f"[predictor] loaded trained CNN ({self.model_name} v{self.model_version})")
                 return
             except Exception as exc:  # noqa: BLE001

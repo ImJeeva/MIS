@@ -14,6 +14,6 @@ export const env = {
   uploadDir: process.env.UPLOAD_DIR || 'uploads',
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB || 15),
   aiServiceUrl: process.env.AI_SERVICE_URL || 'http://localhost:8000',
-  aiTimeoutMs: Number(process.env.AI_TIMEOUT_MS || 20000),
+  aiTimeoutMs: Number(process.env.AI_TIMEOUT_MS || 45000),
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
 };
